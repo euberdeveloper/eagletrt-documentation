@@ -1,0 +1,16 @@
+\section{\huge{Concept}}
+
+\subsection{Introduction}
+
+The telemetry uses two high-precision GPS, one as base-station and another in the car as a rover. 
+The rover GPS data are parsed by the telemetry and saved in a local mongodb. 
+The base-station saves instead a raw ubx log file. 
+The purpose of this project is making easy parsing the wanted data 
+(latitude, longitude timestamp altitude and speed) and save it in an easy-handable format such as json and csv.
+
+\subsection{History}
+On Sunday 23th February 2020 some tests have been taken place. The main purpose was testing the new GPS, that consisted in
+a base and a rover. The rover was plugged directly to the telemetry and its data was read from the serial port, parsed
+and saved. The base was still, it was plugged on a pc and its data was gathered by a pre-made program and all its 
+messages were saved in an ubx file. We needed only some messages and in order to use that data, they should also 
+be parsed in json and csv.

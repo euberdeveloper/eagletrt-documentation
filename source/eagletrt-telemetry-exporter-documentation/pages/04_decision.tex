@@ -1,0 +1,44 @@
+\section{\huge{Decision}}
+The exporter is now a webapp served by the raspberry. 
+The memebers of the team can simply connect to the same net of the raspberry an use the exporter in any browser.
+
+\subsection{Why Vue.js?}
+We decided to implement the fronted using Vue.js, a javascript frontend framework. 
+The frontend is a web frontend, because it is very easy and quick to develope and 
+because it automatically grants support for most devices. 
+The exporter is thought for desktop devices, we decided to avoid making it responsive because we did not need it. 
+It is still usable by phones and with not many changes could be made responsive for all devices.  
+Using vanilla js would have been too time-consuming and we did not need better performances. 
+We thought that Angular was too over-engeenered for small projects like this and among us no one knew React.
+Hence, Vue.js was chosen as frontend framework because it is the most known among the members of the team.
+
+\subsection{Why javascript?}
+Initially I wanted to use Typescript, a language that transpiles to Javascript and allows type-checking.
+Type-checking, expecially with an editor that includes linters, can spare a lot of debugging time and makes 
+the code more readable.
+Unfortunately, I was the only one that knew Typescript, so we decided to switch to Javascript because it was known by everyone.
+This makes the exporter more mantainable if other members of the team will have to deal with its code.
+
+\subsection{Why hosting it in the raspberry?}
+We could have made something that ran on the user's computer and that connected to the raspberry. 
+The problem was that anyone should have had it in its own computer and furthermore they would have needed to 
+install NodeJS (also mongodb-utils for export as json).
+We made the exporter as a normal webapp because now the user could be anyone near the telemetry with almost any device.
+The exporter impact on the telemetry performance is negligible, considering also the fact that it mostly used when 
+the car is not running.
+The code does not change frequently and connecting via ssh to the raspberry in order to update it is not annoying.
+
+\subsection{Why NodeJS?}
+NodeJS is one of the most cutting-edge envinronment to develope server like this. 
+It was already in the telemetry for other purposes, so we did not have to install it only for the exporter.
+The previous command-line version was already written in NodeJS and we kept big parts of that code for the backend.
+We used NodeJS also because a main.js file with a quite short amount of code is enough to serve efficiently a frontend.
+The backend has the purpose of serving the frontend and providing it the API to export the data.
+
+\subsection{Why json and csv?}
+The exporter allows the data to be downloaded as json or csv. These are the most flexible and useful formats for the team needs.
+The json is mostly used to pass the collections from the raspberry mongodb to another pc's mongodb, 
+this is also why the backend uses internally the mongoexport util. 
+The csv is very useful for mathematical elaborations with MatLab or python and is used for example during the tests, 
+when we want to check
+if the data that we are saving is valid. The csv data is taken with mongodb queries and parsing to csv their result.

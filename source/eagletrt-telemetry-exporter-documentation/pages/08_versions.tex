@@ -1,0 +1,27 @@
+\section{\huge{Versions}}
+There are two versions of the telemetry exporter. 
+This is because after the first version, the way the mongodb database was structured changed and the exporter needed to be updated 
+in order to work again.
+
+\subsection{What is a session}
+Every time there was a test or race, multiple "sessions" were saved. A session is a period of time were the car is driven by the same pilot,
+doing the same type of test/race, in the same circuit, stopping only for short amounts of time.
+
+\subsection{1.0}
+Initially, before changing structure, the mongodb was organized in different databases, such as one for each car (chimera and fenice). 
+Each collection in a database corresponded to a session. The name of a collection was decided dinamically by the telemetry and consisted
+in the name of the pilot, the type of race and the time when the session started. Inside the collection there were only the data-documents
+of the session it corresponded. 
+Version 1.0 of the exporter had the same ui of Version 2.0 and the only difference was that it reflected the old database structure. The
+first column showed the databases, the second the collections of the selected database and the third the selected collections.
+To code of the first version is still available on Github, in the branch 1.0 (https://github.com/eagletrt/eagletrt-telemetria-exporter/tree/1.0).
+
+\subsection{2.0}
+At some point the structure of the mongodb database changed and we needed to devlope version 2.0 of the exporter. The current mongodb database
+structure has only a fixed database "ealetrt". It contains various collections with arbitrary names. The collections have the same functions
+that the databases of the old structure had. They are currently four (chimera, fenice, chimera\_test, fenice\_test). Each collection contains 
+two type of documents. The session-documents describe a session with pilot name, type of race, timestamp and a key. The data-documents are the
+same of the documents in the old structure, with the difference that now they contains a reference to the key of their session document. So,
+now, a collection corresponds no more to a single session, but can contain more than one.
+Version 2.0 has as first column the list of the collections, as second column the sessions that the selected collection contains and as third 
+column, the selected sessions.

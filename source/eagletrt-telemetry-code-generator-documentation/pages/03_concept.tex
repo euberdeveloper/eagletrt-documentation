@@ -1,0 +1,16 @@
+\section{\huge{Concept}}
+The telemetry of eagletrt is a program written in C, hosted in a raspberry plugged directly to the canbus of the car. It listens to the can and gps messages, parses
+them in a quite complex structure and every a certain amount of milliseconds saves the structure in a local mongodb and forwards it via mqtt,
+before discarding it and reapeating the cycle.
+
+\subsection{Introduction to the problem}
+The telemetry needed to be written in a low-level language, because performance were essential for the purpose of the team. C is one of the best
+languages if you want to develope efficient programs, but adds a lot of complexity comparing with higher programming languages and usually entails an
+harder job. Nonetheless, writing code in C is very funny because it makes you understand what really happens in your machine when the program 
+is executed, in a far wider extend of the other languages. The most annoying problem with C for this project was that it is statically typed.
+It has to be like that, because it is one of the reasons it is so performant, aber sometimes it means also writing a huge amount of repetitive
+code and repetitive is never funny.
+
+\subsection{Project purpose}
+The purpose of this project, that was initially inside the telemetry and then it was moved, is to reduce to a very significant extend the C code
+that has to be written when some changes happen in the telemetry, saving a huge amount of time.

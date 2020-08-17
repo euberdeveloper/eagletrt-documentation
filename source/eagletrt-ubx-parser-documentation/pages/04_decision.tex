@@ -1,0 +1,24 @@
+\section{\huge{Decision}}
+
+\subsection{Why nodejs?}
+There were no performance reasons to choose a low level language such as C to write this project. We decided to write this
+parser during the tests, so we needed to have it quickly. A good choice could have been using python, but I decided to
+write it in Javascript because I knew it better. The parser is a simple script that runs over nodejs and takes the ubx
+inputs in order to generate the json or the csv parsed outputs.
+
+\subsection{Why a command line program?}
+Like with the telemetry exporter, we could have written this parser with a GUI, developing a webapp or something. 
+But this project was less important then the exporter and would have been used by only one or two members of the team.
+Hence we decided to stay with the simpler solution that was a normal command line program.
+
+\subsection{Why GGA, GGL and RMC messages?}
+Only the gps messages GGA, GGL and RMC are parsed, all the other messages are ignored by the parser. Initially only the 
+car coordinates were needed, in order to plot the track on Google Earth and get a first raw evidence that they worked properly.
+After that, the analisys team needed the coordinates and the speed of the car. The GGA, GGL and RMC messages are the 
+ones that together provide these values and the other messages were consequently ignored. Also the message VTG provided
+the speed of the car, but we discarded it because it had no timestamp.
+
+\subsection{Why NaN on some values?}
+The values that are extracted are latitude longitude timestamp altitude speed and course. The coordinates are converted in a more suitable format.
+Not all messages contain every parameter and initially every parameter that is not contained in a message was set to NaN.
+Later we decided to change it with NaN, becuase it was easier to handle with MatLab.

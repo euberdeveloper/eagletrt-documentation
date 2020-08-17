@@ -1,0 +1,52 @@
+\section{\huge{Versions}}
+Many changes have been done to the telemetry.
+
+\subsection{Mongodb organisation}
+
+\subsubsection{What is a session}
+Every time there was a test or race, multiple "sessions" were saved. A session is a period of time were the car is driven by the same pilot,
+doing the same type of test/race, in the same circuit, stopping only for short amounts of time.
+
+\subsubsection{First mongodb organisation}
+Initially, before changing structure, the mongodb was organized in different databases, such as one for each car (chimera and fenice). 
+Each collection in a database corresponded to a session. The name of a collection was decided dinamically by the telemetry and consisted
+in the name of the pilot, the type of race and the time when the session started. Inside the collection there were only the data-documents
+of the session it corresponded. 
+
+\subsubsection{Current mongodb organisation}
+At some point the structure of the mongodb database changed and we needed to devlope version 2.0 of the exporter. The current mongodb database
+structure has only a fixed database "ealetrt". It contains various collections with arbitrary names. The collections have the same functions
+that the databases of the old structure had. They are currently four (chimera, fenice, chimera\_test, fenice\_test). Each collection contains 
+two type of documents. The session-documents describe a session with pilot name, type of race, timestamp and a key. The data-documents are the
+same of the documents in the old structure, with the difference that now they contains a reference to the key of their session document. So,
+now, a collection corresponds no more to a single session, but can contain more than one.
+
+\subsection{Code organisation}
+
+\subsubsection{During the first test}
+During the first test on the machine, the code pieces (can, mongodb, mqtt, messages parsing) were mostly done. The problem was that the code
+was mostly in an unique main.c file and was very difficult to understand and mantain. For a bug that was difficult to find in the main.c
+we managed to write a javascript version in a day and used it during the very first telemetry test. (Of course it was nowhere near as performant as c)
+
+\subsubsection{The first reorganisation}
+After the first test, we begun to split the c code in more modules. The biggest problem was the c code related to the telemetry data structure.
+
+\subsubsection{The code generator}
+We came up with the javascript code generator and used it to generate the c code related to the telemetry data structure
+
+\subsubsection{Another reorganisation}
+Before another test we reorganised the code again. We made the state machine as it is now, implemented with a matrix of transition functions (before it was only a switch).
+We added also the /utils and the /services folders. 
+
+\subsubsection{Branching the generator}
+After seeing the generator was stable and we did not need to modify it frequently, we decided to rewrite it totally in Typescript and in a clearer
+code and to publish it as an npm module.
+
+\subsubsection{GPS}
+We added the new GPS with the reading of its serial port and the addition of its messages to the structure.
+
+\subsubsection{Threads}
+During the last test, we noticed that the addition of the GPS made the telemetry too slow. Only when the car was in run state, the number
+of can messages increased significantly and added to the GPS serial port reading overhead it started loose messages and data. We solved this
+problem by making two threads: one that read the canbus and another that read the GPS serial port.
+

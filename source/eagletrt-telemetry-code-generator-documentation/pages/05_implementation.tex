@@ -1,0 +1,97 @@
+\section{\huge{Implementation}}
+The code of the generator can be found in this github repo: https://github.com/eagletrt/eagletrt-code-generator
+
+\subsection{General}
+The project is written in Typescript and is an npm package, usable both as local and global module. 
+
+\subsubsection{Dependencies}
+The dependencies are:
+
+\begin{itemize}
+    \item chalk (https://www.npmjs.com/package/chalk) for a coloured output
+    \item dree (https://www.npmjs.com/package/dree) to manage the directory trees
+    \item yargs (https://www.npmjs.com/package/yargs) for the command line part
+\end{itemize}
+
+The dev-dependencies are:
+
+\begin{itemize}
+    \item typescript (https://www.typescriptlang.org/) to transpile the Typescript code into Javascript
+    \item eslint (https://eslint.org/) to lint the code, so that it is clear and follows a standard
+    \item @typescript-eslint/eslint-plugin and @typescript-eslint/parser to use eslint with Typescript
+    \item @types/node and @types/yargs to provide the types definitions for the dependencies
+    \item commitizen (https://www.npmjs.com/package/commitizen) to have a standardized commit on git
+    \item typedoc (https://typedoc.org/) to generate the documentation from comments in the code
+    \item now (https://www.npmjs.com/package/now) to host costlessly the generated documentation site
+\end{itemize}
+
+\subsubsection{Package.json scripts}
+The package.json has a few scripts to help develope the module:
+
+\begin{itemize}
+    \item transpile: it transpiles the Typescript in Javascript
+    \item lint: it lints the code
+    \item lint:fix: it lints and fixes the code
+    \item docs: it uses typedoc to generate the documentation site and now to upload it. It uses other "docs:" helper scripts.
+    \item commit: it uses commitizen to commit on git
+\end{itemize}
+
+\subsubsection{main and bin}
+In the package.json, the specified main file is the file that will be imported when the module will be imported by another project.
+The bin is the one that will be executed when the module will be used as a command line program.
+
+\subsection{The code}
+
+\subsubsection{package.json}
+In the root folder there is the package.json, that is the manifest of the npm module. It declares some helper npm scripts and both the dependencies 
+and the dev-dependencies.
+
+\subsubsection{tsconfig.json}
+The source/tsconfig.json file is the json file that configures the Typescript transiplation of the code
+
+\subsubsection{docs}
+The /docs folder contains the assets for the documentation, the generated-by-typedoc documentation site and a text file with the directory tree of
+the project generated with dree.
+
+\subsubsection{source}
+The /source folder contains all the Typescript code. It is divided in two folders /lib for the actual library and /bin, that imports the code inside
+/lib and yargs to make the module command-line usable.
+
+\paragraph{lib}
+The lib folder is structured like this:
+
+\begin{itemize}
+    \item index.ts: It is the root file and the one exported by the npm module that will be published
+    \item /types: It contains the main typescript types, interfaces and general classes
+    \item /generators: It contains all the code reguarding the declarations of the c code generators and their associated special comment.
+        \begin{itemize}
+            \item /bson is a folder containing the generator that creates the c code to transform the telemety data structure to bson
+            \item /structure is a folder containing the generators that reguards the allocation, deallocation and declaration of the c struct. It contains also a structureGenerator.ts file that provides a more-defined generator class that all the structure generators extend
+            \item index.ts is the flie imported by the root index.ts. It uses dree to iterate through all its siblings folders and files. Only the files ending with .generator.js are considered. All these imported classes are then exported in an array. The extension is js because this task is executed at runtime, when the generators in the siblings folders are already transpiled in js.
+        \end{itemize}
+    \item /utils: It contains various ts files that will be used by the index.ts file. 
+        \begin{itemize}
+            \item options.ts exports a function that given the user-provided options object returns it with the default values put where none were provided
+            \item logger.ts exports a class whose purpose is providing a beautiful log
+            \item getCodes.ts exports a function that, given the path of the structure.json file and the array of generators provided by /generators/index.ts, makes the generators creating the code and returns them.
+            \item transpile.ts exports a function that, using dree, scans the given src folder to search the template files, replaces the special comments with the right generated code and creates their analog file without the .template extension.
+            \item parseTemplate.ts exports helper functions for transpile.ts
+        \end{itemize}
+\end{itemize}
+
+\paragraph{bin}
+The bin folder contains only an index.ts. It imports the lib from /lib/index.ts and the external module yargs, in order to make the module usable also as
+a command line program.
+
+\subsection{Transpiling}
+The Typescript is transpiled in Javascript so that nodejs can understand it. The tsconfig.json contains the configurations of the transpilation and the
+/source folder is transpiled in a /dist folder that also contains /bin and /lib folders.
+
+\subsection{More information about the code}
+To have further information about the code, it is possible to follow two documentation sites made with typedoc:
+
+\begin{itemize}
+    \item user: https://eagletrt-code-generator.euberdeveloper.now.sh/. It contains only the information about the exported functions of the library.
+    \item dev: https://eagletrt-code-generator-dev.euberdeveloper.now.sh/. It contains information about all the files and function of the library.
+\end{itemize}
+

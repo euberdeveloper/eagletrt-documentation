@@ -1,0 +1,127 @@
+\section{\huge{User usage}}
+
+\subsection{Local module}
+To use this section as a local module:
+
+\begin{enumerate}
+    \item Install the module locally npm install --save eagletrt-code-generator
+    \item Given a directory structure such as
+        \begin{verbatim}
+            code/
+                structure/
+                    structure.template.h
+                    structure.c
+                utils/
+                    utils.h
+                    utils.template.c
+                main.template.c
+        \end{verbatim}
+        And a script such as
+        \begin{verbatim}
+            const generator = require('eagletrt-code-generator');
+
+            const src = './code';
+            const structure = './code/structure.json';
+            const options = {
+                extensions: ['c', 'h', 'cpp', 'hpp'],
+                log: true
+            };
+
+            generator.generate(src, structure, options);
+        \end{verbatim}
+        The result will be:
+        \begin{verbatim}
+            code/
+                structure/
+                    structure.template.h
+                    structure.h
+                    structure.c
+                utils/
+                    utils.h
+                    utils.template.c
+                    utils.c
+                main.template.c
+                main.c
+        \end{verbatim}
+        Where all the special commments in the .template.c or .template.h files will be replaced with the code generated in base of the structure.json file and put in files with the same name without the .template extension.
+\end{enumerate}
+
+\subsection{Global module}
+To use this section as a global module:
+
+\begin{enumerate}
+    \item Install the module globally npm install -g eagletrt-code-generator
+    \item Given a directory structure such as
+        \begin{verbatim}
+            code/
+                structure/
+                    structure.template.h
+                    structure.c
+                utils/
+                    utils.h
+                    utils.template.c
+                main.template.c
+        \end{verbatim}
+        And a the command:
+        \begin{verbatim}
+            eagle generate --src code --structure .code/structure.json --extensions c h
+        \end{verbatim}
+        The result will be:
+        \begin{verbatim}
+            code/
+                structure/
+                    structure.template.h
+                    structure.h
+                    structure.c
+                utils/
+                    utils.h
+                    utils.template.c
+                    utils.c
+                main.template.c
+                main.c
+        \end{verbatim}
+        Where all the special commments in the .template.c or .template.h files will be replaced with the code generated in base of the structure.json file and put in files with the same name without the .template extension.
+    \item To show the help execute:
+        \begin{verbatim}
+            eagle generate --help
+        \end{verbatim}
+\end{enumerate}
+
+\subsection{api}
+
+The module exports only the function "generate".
+
+\subsubsection{signature}
+\begin{verbatim}
+    generate(src, structure, options)
+\end{verbatim}
+
+\subsubsection{parameters}
+
+\begin{itemize}
+    \item src: Optional. The folder where the template files will be fetched from. The default is the current folder.
+    \item structure: Optional. The path to the json file containing the structure, used by generators to dynamically generate code. The default is structure.json.
+    \item options: Optional. The options object specifying things such as logging, indentation and filters on the files
+\end{itemize}
+
+\subsubsection{options parameters}
+
+\begin{itemize}
+    \item exclude: Default value: /node\_modules/. A RegExp or an array of RegExp whose matching paths will be ignored.
+    \item extensions: Default value: undefined. An array of strings representing the extensions that will be considered. By default all extensions will be considered.
+    \item log: Default value: true. If the log will be shown on the terminal.
+    \item indent: Default value: true. If the generated code will be indented the same as the comment it will substitute.
+\end{itemize}
+
+\subsection{special comments}
+
+The special comments usable in the C code are:
+
+\begin{itemize}
+    \item {{GENERATE\_BSON}}: Generates the code of the function that given the structure variable, creates the bson object
+    \item {{GENERATE\_STRUCTURE\_TYPE}}: Generates the c struct representing the structure
+    \item {{GENERATE\_STRUCTURE\_ALLOCATOR}}: Generates the code of the function that allocates the structure
+    \item {{GENERATE\_STRUCTURE\_DEALLOCATOR}}: Generates the code of the function that deallocates the structure
+\end{itemize}
+
+For examples and more inforamtion about the special comments, read the README of the repo (https://github.com/eagletrt/eagletrt-code-generator/blob/master/README.md)

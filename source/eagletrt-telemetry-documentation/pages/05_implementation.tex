@@ -1,0 +1,60 @@
+\section{\huge{Implementation}}
+The code of the telemetry is totally implemented in C. There are some json files for the configuration and the code 
+generator and an sh file for the compilation.
+
+\subsection{Structure}
+The project has these files:
+
+\begin{itemize}
+    \item package.json: It can seem strange to find a package.json file in a project totally written in C. We added it because it contains the dependency of the eagletrt-code-generator (https://www.npmjs.com/package/eagletrt-code-generator). Since we added it, we added also some npm scripts that organized the bash commands that we otherwise would have to run
+    \item structure.json: It defines the telemetry data structure and is the input provided to the code generator
+    \item config.json: It contains the configuration of the program, it can be changed without recompiling the program and has already been described
+    \item compile.sh: It is a bash script that compiles the program
+    \item idle\_signal.sh and enable\_signal.sh: These are used only during developement, to simulate the steering wheel can messages that start and stop the telemetry
+    \item main.c: It is the root of the program
+    \item /state\_machine: In this folder there is the code reguarding the state machine
+    \item /services: In this folder there are modules of C code divided by type of service (mongodb, mqtt, ...) that are used by the state function of the state machine
+    \item /utils: In this folder there are modules of C code that provide more general purpose functions
+\end{itemize}
+
+\subsection{The npm scripts}
+The npm scripts simplify the life of who uses the project. They are:
+
+\begin{itemize}
+    \item "transpile": The executed command is "npx eagle generate" and it executes the code generator
+    \item "compile": The executed command is "./compile.sh" and it compiles the C code
+    \item "start": The executed command is "sudo ./sender.out config.json" and it starts the program
+    \item "serve": The executed command is "npm run compile \&\& npm run start" and it compiles and start the program
+    \item "enable": The executed command is "./enable\_signal.sh" and it simulates (debug during developement) the steering wheel can message that starts the telemetry 
+    \item "idle": The executed command is "./idle\_signal.sh" and it simulates (debug during developement) the steering wheel can messages that stops the telemetry 
+\end{itemize}
+
+\subsection{The state machine}
+
+The code is based on a state machine implemented with a matrix of transition functions. There is a unique mega-global variable called "condition", that is indeed the condition of the 
+state machine. Initially the code was full of global variables, but that made it very messy. Removing completely the 
+global variables would have put a lot of overhead in the functions parameters and creating the condition variable seemed to
+be the right way to organize the code.
+
+\subsubsection{The states}
+
+The states are:
+
+\begin{itemize}
+    \item INIT: When the telemetry is starting, it reads the config file and sets up everything (canbus interface, gps serial port, mqtt connection, mongodb connection). After being executed, it will pass to the IDLE state.
+    \item IDLE: The telemetry is actually running. There are two threads that read all the can messages and gps messages and save them in a structure. Every 500ms this structure is converted to bson and sent via mqtt. After being executed, it will repeat itself unless a can message to enable the telemetry is received.
+    \item ENABLED: The telemetry does the same thing of the IDLE state, but it also saves the data in mongodb. After being executed, it will repeat itself unless a can message to disable the telemetry is received.
+    \item EXIT: The telemetry tries to gently deallocate all the data and close all connections before exiting. It is usually reached when an error occurs.
+\end{itemize}
+
+\subsubsection{The c code organization}
+
+The C code organization is divided in four parts:
+
+\begin{itemize}
+    \item main.c: It is the root of the project and simply runs the state machine
+    \item /state\_machine: It is the state machine and contains its definition of the state machine and the functions for each state. It uses as dependencies the /utils and /services libraries. Also, it provides to them the definition of the condition struct.
+    \item /services: It contains various modules of C code, separated by purpose (mongodb, mqtt, ...). It has in the header the extern of the condition struct, so its function are aware of that variable and use it.
+    \item /utils: It contains various modules of C code, separated by purpose (mongodb, mqtt, ...). It has not in the header the extern of the condition struct, so its function are not aware of that variable and do not use it. These are functions mostly used by the /services libraries and are more general purpose.
+\end{itemize}
+

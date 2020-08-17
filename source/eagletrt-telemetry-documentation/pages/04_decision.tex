@@ -1,0 +1,392 @@
+\section{\huge{Decision}}
+
+\subsection{The raspberry}
+
+The telemetry needed to read the messages of the can, to have enough computation power to parsing all of them,
+saving them and sending them via mqtt and it needed also enough memory to store large amounts of data.
+
+\subsection{The operative system}
+
+All the members of the team use Linux. Raspberry runs almost always with Linux. All the libraries and programs that we wanted to
+use ran on Linux. Using Linux for the telemetry was certainly not a difficult choice. We decided though not to use Raspbian but
+to use Ubuntu (arm) instead. This is because Ubuntu's support for what we needed was greater and most of the members of the team 
+use it in their own pc. Using Ubuntu was also a good idea in order to be able to develope locally in our pc's the telemetry and having
+not too much truble in porting it to the telemetry
+
+\subsection{The programming language}
+
+We used C as the programming language of the telemetry because we needed the best performances that we could have achieved. The telemetry
+needed to read all the can messages, parse most of them and store them in a data structure. Then, every a certain amount of time, it would
+have discarded the data structure before saving the data in the database and created a new one. Only with a low-level language we managed to
+reach the performances we needed. We did not use C++ because we thought that C provided us all what we needed. Furthermore, without using classes
+of more "high-level" libraries, we were more sure that we would have not lost performances.
+
+\subsection{The database}
+
+We used mongodb as database. A big part of the team members knew it and this is one of the reasons because we chose mongodb, among the fact that 
+it has good performances. But the main reason for our choice was that it is flexible and versatile. Using a relational database, we would have
+been forced to choose a static schema for the data and changing it in the future would have been a hell. The structure would have surely changed
+because it was probable that new sensors or messages would have been added after the developement of the telemetry. With mongodb this problem 
+just disappeard.
+
+\subsection{The sending protocol}
+
+We wanted be able to display the sensors data also while the car was running. We chose to use the mqtt protocol because it was one of the most popular
+and easy to implement. With mqtt we can have a pseudo-realtime and show data for instance in a web frontend that uses mqtt over websocket while the 
+car is running.
+
+\subsection{The activation}
+
+During the first tests we noticed two things. The first is that it was very annoying to connect every time via ssh to the raspberry in order to 
+start or stop the telemetry. The second was that for big amounts of time the car was still and there was no reason to add rumor and megabytes 
+for unneeded data. Our solution was making the telemetry comunicating with te steering wheel via the canbus. The steering wheel was able to 
+start and stop the telemetry, while the telemetry responded with its status, that was displayed on the wheel monitor. The telemetry is a program
+that is always running, but the steering wheel can make it idle or active. When it is idle it saves nothing in the database, but continues to 
+send the data via mqtt because it does not occupy space.
+
+\subsection{WIFI and autorun}
+
+To send data via mqtt and be reachable via ssh, the telemetry needs to be connected to a net. We have bought a soap of the Huawei and we use it 
+as a portable WIFI hotspot that stays always in the car. The raspberry automatically connects to the soap on boot-time. To avoid loosing time
+connecting via ssh and starting the telemetry program, we used systemctl to authomatize it and make it a service that is always running.
+
+\subsection{The exporter}
+
+Even if the telemetry was an always-running service, we needed to connecto to it via ssh every time we needed to export the data. And it was a 
+very long and tedious thing. We started a side project that eventually evolved in a webapp exporter, with a Vue.js frontend and a nodejs backend
+that is served by the raspberry itself. The served backend is also an always-running service and the only task needed to connect to it is to 
+connect to the Huawei soap and open a browser on the telemetry IP.
+
+\subsection{Timestamp}
+
+The telemetry saves the timestamp of the messages when they are received and also the timestamp of the BSON document when it is saved. We wanted
+to have the epoch unix timestamp in milliseconds. The problem was that the soap had (and still does not have) a sim to connect to internet.
+Connecting to ssh and updating the data-time every time we turned on the car was a hell, so we decided to develope a provvisory solution.
+The solution is another always running service, it is a nodejs service that listens to the mqtt and when it receives a particular message,
+it changes the date-time with the one provided. This temporary solution was also used to simulate the steering wheel when it was not still ready
+to send the start and idle signals to the telemetry. More information and the code can be found in this repo: https://github.com/eagletrt/eagletrt-telemetria-controller
+
+\subsection{The sessions}
+
+In order to have more meaningful data, we decided to group it into sessions. A session is a period of time when the car is driven always by the
+same pilot, doing always the same type of race in the same ciruit, stopping only for short amounts of time. This gives us more organized and
+handable data and helps a lot the analysis team. A session has as references the pilot, the type of race and the timestamp when the telemetry
+started saving the data. When the steering wheel actives the telemetry, it specifies also the pilot and the type of race, that are selected by
+the pilot.
+
+\subsection{The developement envinronment}
+
+We did not write the telemetry directly in the raspberry. That is also why we chose Ubuntu arm as the operative system of the raspberry, because
+it was the same (but arm) of the one in our machines. To emulate the canbus we mout a virtual can in our pc and to emulate the can messages we
+use canplayer (https://github.com/linux-can/can-utils) with a real can log of the machine. Since the gps is connected with a serial port, we 
+managed to write a simulator that fakes that serial port and takes an ubx gps log as input. We made the simulator as a side-project and this
+is the repo (https://github.com/FilippoGas/eagletrt-telemetry-simulator).
+
+\subsection{The compilation}
+
+We do not cross compile the code of the telemetry. It does not change so frequently and we just put the new code (or clone from github) and compile
+it directly in the raspberry through ssh. By doing this, we can also modify the code during tests and recompile it if needed.
+
+\subsection{The configuration}
+
+\subsubsection{Purpose}
+
+We made a json file config that is read when the telemetry starts. So if we have to change for instance the mongodb uri, 
+we do not have to recompile the code, but just to modify the json file and to restart the program.
+
+\subsubsection{Details}
+
+The config resides in the config.json file. The options are:
+
+\begin{itemize}
+    \item mqtt: The options regarding the mqtt connection
+        \begin{itemize}
+            \item host: The host of the mqtt connection
+            \item port: The port of the mqtt connection
+            \item data\_topic: The topic where the bson data is sent
+            \item log\_topic: The topic where the telemetry log is sent
+        \end{itemize}
+    \item mongodb: The options regarding the mongodb connection
+        \begin{itemize}
+            \item host: The host of the mongodb connection
+            \item port: The port of the mongodb connection
+            \item db: The db where the data will be saved
+            \item collection: The collection where the data will be saved
+        \end{itemize}
+    \item gps: The options regarding the rover gps plugged to the telemetry
+        \begin{itemize}
+            \item plugged: If the gps is plugged to the telemetry. If the gps is not plugged but this option is set to 1, the telemetry will try to read the gps serial port and will crush.
+            \item simulated: If the gps is simulated and not real.
+            \item interface: The interface name of the gps serial port
+        \end{itemize}
+    \item pilots: The array containing the possible pilots who drive the car. Every time the steering wheel enables the telemetry, it specifies also the index of the pilot who drives the car. The pilots name will be added to the current session, to the data saved in the database
+    \item races: The array containing the possible races that the car can perform. Every time the steering wheel enables the telemetry, it specifies also the index of the race that the car is performing. The race name will be added to the current session, to the data saved in the database
+    \item circuit: The array containing the possible circuits where the car is running. Every time the steering wheel enables the telemetry, it specifies also the index of the circuit where the car is running. The circuit name will be added to the current session, to the data saved in the database. NB: currently not implemented
+    \item can\_interface: The interface of the canbus
+    \item sending\_rate: The number of milliseconds every which the telemetry saves the accumulated data, before emptying it and repeating the cycle
+    \item verbose: If also the debug messages will be logged in the console
+\end{itemize}
+
+\subsubsection{Example}
+
+This is an example of config.json
+
+\begin{verbatim}
+{
+  "mqtt": {
+    "host": "localhost",
+    "port": 1883,
+    "data\_topic": "telemetria",
+    "log\_topic": "telemetria\_log"
+  },
+
+  "mongodb": {
+    "host": "localhost",
+    "port": 27017,
+    "db": "eagle\_test",
+    "collection": "scimmera"
+  },
+
+  "gps": {
+    "plugged": 1,
+    "simulated": 1,
+    "interface": "/dev/pts/4"
+  },
+
+  "pilots": [
+    "default",
+    "Ivan",
+    "Filippo",
+    "Mirco",
+    "Nicola",
+    "Davide"
+  ],
+
+  "races": [
+      "default",
+      "Autocross",
+      "Skidpad",
+      "Endurance",
+      "Acceleration"
+  ],
+
+  "circuits": [
+    "default",
+    "Vadena",
+    "Varano",
+    "Povo"
+  ],
+
+  "can\_interface": "can0",
+  "sending\_rate": 500,
+  "verbose": 0
+}
+\end{verbatim}
+
+\subsection{The cycle}
+
+The telemetry accumulates all the messages in a data structure and saves it every a certain amount of milliseconds. This way the data is more
+standardized and by grouping it we limit the overhead of the BSON format and decrease the size of the saved and sent data.
+
+\subsection{The data structure}
+
+A big part of the code is related to the telemetry data structure. It is the model of the data, that specifies what and how is stored in the database.
+Here are written all the considered messages, the type of their values and all the rest. 
+
+\subsubsection{The C struct}
+
+This things have to be put in a C variable in some way, wo there is a struct that reflects that model and has to be changed every time the 
+data structure changes, for instance when new messages are added.
+
+\subsubsection{The structure.json}
+
+There is a json file, the structure.json file, that is a sort of "manifest" file and reflects the telemetry data structure. Every time something
+changes in the structure it is updated.
+
+\subsubsection{The structure of the structure}
+
+The structure of the gathered data is saved in the structure.json file and is based on the possible messages:
+
+\begin{itemize}
+    \item The structure is a json object, but every primitive key contains the value type instead of the value itself
+    \item For each message there is an array of objects
+    \item Each array contains only two elements: the message object and the message max count
+    \item Each message object represents the model of the parsed message. It has the timestamp of the receive time and a value containing the value of the message (a value or an object of values)
+    \item Each message max count represents the maximum number of messages that can be saved in a single document
+    \item Each array can be saved directly in the "root" of the structure object, or nested in other objects, in order better to organize the structure. For instance, all the bms message arrays are nested in the bms object
+    \item There is an id key, containing a progressive id of the document starting by 1
+    \item There is a timestamp key, containing the timestamp when the document is saved in the db, or sent via mqtt
+    \item There is a sessionName key, that refers to the session of the document itself
+\end{itemize}
+
+Each time the telemetry enters in the ENABLED state, the id number is reset and a new session is created.
+A session is based on the timestamp when the telemetry was enabled and the parameters (pilot, race) passed by the steering wheel. 
+A session document containing these parameters is created and inserted in the database.
+
+\subsubsection{Example of structure.json}
+
+\begin{verbatim}
+{
+    "id": "int",
+    "timestamp": "long",
+    "sessionName": "char*",
+    "throttle": [
+        {
+            "timestamp": "long",
+            "value": "double"
+        }, 200
+    ],
+    "brake": [
+        {
+            "timestamp": "long",
+            "value": "double"
+        }, 200
+    ],
+    "bms\_hv": {
+        "temperature": [
+            {
+                "timestamp": "long",
+                "value": {
+                    "max": "double",
+                    "min": "double",
+                    "average": "double"
+                }
+            }, 500
+        ],
+        "voltage": [
+            {
+                "timestamp": "long",
+                "value": {
+                    "max": "double",
+                    "min": "double",
+                    "total": "double"
+                }
+            }, 500
+        ]
+    }
+}
+\end{verbatim}
+
+\subsubsection{Example of session document}
+
+This is an example of the session document:
+
+\begin{verbatim}
+{
+    "sessionName": "20200309\_175011\_default\_default",
+    "timestamp": 1583772611,
+    "formatted\_timestamp": "20200309\_175011",
+    "pilot": "default",
+    "race": "default"
+}
+\end{verbatim}
+
+\subsubsection{Example of data document}
+
+This is an example of the data document:
+
+\begin{verbatim}
+{
+    "id": 23,
+    "timestamp": 10483862400000,
+    "sessionName": "2020\_04\_23\_\_12\_00\_00\_\_pilot\_race",
+    "throttle": [
+        {
+            "timestamp": 10483862400001,
+            "value": 0
+        },
+        {
+            "timestamp": 10483862400002,
+            "value": 5
+        },
+        {
+            "timestamp": 10483862400003,
+            "value": 6
+        }
+    ],
+    "brake": [
+         {
+            "timestamp": 10483862400001,
+            "value": 0
+        },
+        {
+            "timestamp": 10483862400004,
+            "value": 100
+        }
+    ],
+    "bms\_hv": {
+        "temperature": [
+            {
+                "timestamp": 10483862400000,
+                "value": {
+                    "max": 28,
+                    "min": 22,
+                    "average": 25
+                }
+            }
+        ],
+        "voltage": [
+            {
+                "timestamp": 10483862400000,
+                "value": {
+                    "max": 312,
+                    "min": 200,
+                    "total": 250
+                }
+            },
+            {
+                "timestamp": 10483862400007,
+                "value": {
+                    "max": 312,
+                    "min": 200,
+                    "total": 250
+                }
+            }
+        ]
+    }
+}
+\end{verbatim}
+
+\subsection{The code generation}
+
+\subsubsection{Mantainibility problem}
+
+Here comes a big problem. C is a statically typed language. This means that it is not suited to handle json object like the structure. 
+A structure like the one in the example above, but much longer in the reality, should be used in C code. The result is a structure deﬁnition 
+of 350 lines of code, an instance allocation of 50 lines of code, a bson conversion of 400 lines of code and an instance deallocation of 30 lines
+of code. Taking in account that the structure changed frequently, because the new sensors or can messages were added, mantaining and keeping 
+updated that code was worse than the hell. If only a message changed, we would have to change four diﬀerent parts of the code and some of 
+them were between 400 lines of code that seem always the same. 
+
+\subsubsection{The solution}
+
+Here is the purpose of the structure.json. We developed a Typescript program that takes as in put the structure.json and generates for us the
+part of the code that depends on the structure. If the structure changes, instead of changing some C code in four different parts finding the right
+line between thousands, we only need to change the structure.json and run a program that does the task for us. The task that before occupied the 85\%
+of our time can be now achived in a matter of seconds.
+
+\subsection{The mqtt log}
+During debugging we could simply look at our terminal to see the logs and to understand what was happening
+during the execution of the telemetry. During the tests, these logs are still available using journalctl,
+being the telemetry a service. The problem is that this is uncomfortable during the execution, hence we
+decided that part of the log will be sent via mqtt on a different topic from the one of the data, so that 
+we can see the logs from another device.
+
+\subsection{The states}
+
+\subsubsection{List of the states}
+
+The behaviour of the telemetry can be described with four states:
+
+\begin{itemize}
+    \item INIT: When the telemetry is starting, it reads the config file and sets up everything (canbus interface, gps serial port, mqtt connection, mongodb connection). After being executed, it will pass to the IDLE state.
+    \item IDLE: The telemetry is actually running. There are two threads that read all the can messages and gps messages and save them in a structure. Every 500ms this structure is converted to bson and sent via mqtt. After being executed, it will repeat itself unless a can message to enable the telemetry is received.
+    \item ENABLED: The telemetry does the same thing of the IDLE state, but it also saves the data in mongodb. After being executed, it will repeat itself unless a can message to disable the telemetry is received.
+    \item EXIT: The telemetry tries to gently deallocate all the data and close all connections before exiting. It is usually reached when an error occurs.
+\end{itemize}
+
+\subsubsection{Purpose of the states}
+
+Representing the telemetry as a state machine is a powerful strategy to start to implement it in a low-level language such as C. 
+Our C implementation of the state machine changed from a simple switch to a matrix of transition functions and a unique global 
+variable called condition.

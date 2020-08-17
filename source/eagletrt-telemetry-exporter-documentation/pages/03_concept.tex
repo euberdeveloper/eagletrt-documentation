@@ -1,0 +1,41 @@
+\section{\huge{Concept}}
+After succeeding in making the telemetry work, we needed a quick way to safely export the gathered data. 
+Initially we were used to manually export the data, using ssh and scp. When the number of the collections 
+started to increase and we began loosing time to export the data during the tests, we started thinking to 
+a better solution.
+
+\subsection{Introduction}
+The telemetry is a raspberry that resides in the car, plugged to the canbus. 
+It listens to the can and gps messages and saves information on a local MongoDB. 
+During the first tests we noticed that we were loosing a big amount of time to export the database data, 
+that was done manually with ssh and scp. The purpose of the exporter is to provide a quick and productive way 
+to export the data. 
+
+\subsection{Evolution}
+The idea of a webapp as an exporter came only after some time. Before thinkind it was necessary, 
+others solutions were thought and partially implemented.
+
+\subsubsection{Without exporter}
+Exporting the telemetry data manually was very long and annoying. 
+The name of the MongoDB collections were made dinamically by the telemetry itself in order 
+to provide useful information of their content, such as driver, type of race and timestamp. 
+When exporting manually the collections, we needed to connect with ssh to the raspberry. 
+After that we needed to list the collections with mongo and choose which were to be exported. 
+Then we needed to use mongoexport for each of them, writing manually the collection name and the 
+generated json path. Lastly we had to use scp to pass the json files from the raspberry to our pc.
+
+\subsubsection{Using bash}
+Initially we thought to write a simple bash script to automatize the job. But soon, before finishing it, 
+we noticed that it would not have been enought to simplify the job. We would have stil had to connect via 
+ssh to the telemetry.
+
+\subsubsection{Writing a command line program}
+After abandoning the idea of a bash script, we wrote a prototype of a command-line exporter. 
+It was written with NodeJS (already installed in the raspberry) and allowed to export the collections as 
+json (with mongoexport) or as csv. This solution was already quite good and quick: the user could select 
+the collections from a list and it was run by the pc without using ssh.
+
+\subsubsection{Writing a webapp}
+The command line program was already good, but we thought that it would have been great to enhance the exporter 
+providing an intuitive GUI, so that it would habe been easier to everyone to learn how to export the data. 
+Furthermore, with the command line exporter the user had to have nodejs and mongodb-utils installed in his pc.

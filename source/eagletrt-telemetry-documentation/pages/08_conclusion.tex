@@ -1,0 +1,11 @@
+\section{\huge{Conclusion}}
+
+\subsection{Summary}
+Instead of buying a pre-made telemetry we managed to write one from scratch.
+
+\subsection{Future}
+There are still many changes that are coming for the telemetry. With the new car, fenice, the structure of the can messages will totally 
+change. Firstly, there will be two canbus. So the telemetry will have to support two of them. Then, the can messages id's will be generated
+automatically and we have already the plan (and a prototype) of the c code generator that will generate automatically also the 
+parsing c code of the messages. Last but not least, an idea could be the one of keeping only a unique telemetry for fenice and the old
+chimera, making it retrocompatible by properly modifying the config.json.

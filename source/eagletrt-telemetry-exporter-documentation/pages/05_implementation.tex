@@ -1,0 +1,59 @@
+\section{\huge{Implementation}}
+The code of the exporter can be found in this github repo: https://github.com/eagletrt/eagletrt-telemetria-exporter
+
+\subsection{Frontend}
+The frontend is made with Vue.js and resides in the vuejs folder.
+
+\subsubsection{Vue cli configuration}
+The webapp is single-page, so vue-router was not added.
+We used vuex (https://vuex.vuejs.org/) as store for the data that was external from the components flow.
+We used the default linter to a correct and pretty code.
+
+\subsubsection{External modules}
+A part from the Vue.js ones, other external modules were imported. 
+For the general layout it was used bootstrap-vue (https://www.npmjs.com/package/bootstrap-vue).
+For the beautiful scrollbar it was used vue2-perfect-scrollbar (https://www.npmjs.com/package/vue2-perfect-scrollbar).
+For the http requests it was used axios (https://www.npmjs.com/package/axios).
+
+\subsubsection{Configuration}
+The frontend has a file /src/config.js that contains a simple configuration object that specifies the url for the API calls.
+
+\subsubsection{Assets}
+In the /public folder, only a favicon and a logo were added as assets. The logo is displayed on error messages or 
+at loading time.
+The logo is available both in png and webp, so that it can be downloaded by the browser in a short amount of time.
+
+\subsubsection{Structure}
+The /src folder contains only the usual main.js and App.vue, the config.js, the store.js for vuex, that contains 
+the biggest logic/controlling part, and two other folders. 
+/components is the usual folder containing the vue components
+/services contains simple javascript files containing utils and useful functions, such as the api calls and 
+the function to download the zip file.
+
+\subsection{Backend}
+The frontend is a NodeJS server
+
+\subsubsection{External modules}
+There are lots of external modules used by the backend.
+express as framework, body-parser to parse the post requests bodies, chalk for coloured logs, compression to compress the served frontend, 
+cors for cross-origin requests, helmet for security, morgan for the requests logs, rimraf to remove the temp files and folders, zip-lib to
+zip folders, dree for directory-tree inspections and mongodb to query the database.
+
+\subsubsection{Created modules}
+Some parts of the backend code were quite articulated and considered reusable for other projects. 
+Hence, we decided to publish three npm modules and importing them in the exporter.
+The first is mongo-scanner (https://www.npmjs.com/package/mongo-scanner), to retrieve the structure of a mongodb database, such as the
+databases and the collections that it contains.
+The second is mongoback (https://www.npmjs.com/package/mongoback), to an easily and fully configurable export of data 
+using mongoexport under the hoods. In the exporter it is used to export the data as json.
+The third is eagletrt-csv (https://www.npmjs.com/package/eagletrt-csv), which is a sort of analogue of mongoback, but it parses 
+data supposing it is structured as our database stucture and in the exporter it is useed to export the data as csv.
+
+\subsubsection{Structure}
+The /main.js file is the root of the server, where express is imported and the server starts waiting for requests.
+the /config.js file contains a json object used as configuration of the server. It contains the server port, 
+the mongodb urls, the location of the frontend to serve and the logger colours.
+The /frontend folder contains the built vue frontend, which is served statically.
+The /utils folder contains js files that provides useful function used in various files.
+The /routes folder contains the routes of the API. It contains a routes folder with .route.js files that provide the various routes and an
+index.js file that, by using dree, finds all the .route.js files in the routes folder and adds it to the express router.

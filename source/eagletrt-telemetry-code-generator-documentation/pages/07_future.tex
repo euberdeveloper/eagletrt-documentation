@@ -1,0 +1,25 @@
+\section{\huge{Future}}
+
+\subsection{Storic}
+The module was initially a javascript program that ran on nodejs, was located in the same repo of the telemetry and was written in three days.
+After that it was debugged by using it and improved, until it was eventually moved in an own repository. The last modifies reguarded the traduction traduction
+to Typescript and the complete reorganization of the code. This is because the telemetry C code needed this module and without it would take
+lots of time to write manually the code that depends on the data structure. Having only I worked on this project, I had to organize the code and
+make it clearer so that any other developer could subsequently maintain it quite easily. A .travis.yml was also added so that the linting and 
+documentation site update was done automatically by Travis.ci (https://travis-ci.org).
+
+\subsection{Future}
+The module is now stable, but it will be probably extended to automatize other parts of the c code.
+
+\subsubsection{Config interpretation}
+The telemetry uses a config.json file to general configuration, such as mqtt and mongodb uri and other stuff. The json config file is quite
+articulated is interpreted with JSMN (https://zserge.com/jsmn/) which is very cool but requires lots of code. In the future, this task could
+be automatized with this code generator.
+
+\subsubsection{Message parsing}
+Another task, more important, that can and probably will be authomatized in the future is the can message parsing. Currently over 85\% of the time
+used to maintain and improve the telemetry is occupied by the part that parses the can messages and stores the values in the data structure.
+This is because that part of code is, again, repetitive, long and changes frequently. With the new car fenice the messages ids will be generated
+automatically and given another json file (messages.json) together with the current structure.json file properly modified, we think that it will
+be possible to authomatize also the task of parsing the can messages. This was actually (only conceptually because fenice was at the time still to be
+made) already done and the example can be find following this branch of this repo https://github.com/euberdeveloper/telemetria-c/tree/newTask.

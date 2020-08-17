@@ -1,0 +1,189 @@
+\section{\huge{Decision}}
+
+\subsection{The telemetry data structure}
+
+\subsubsection{What is it}
+The telemetry reads the messages that arrive from the canbus and from the gps rover serial port. Every a certain amount of milliseconds it saves
+in a local mongodb the data and forwards it via mqtt. In order to do this, it needs to parse and accumulate all the messages that arrive in 
+a variable, modeled in base of what we call the "telemetry data structure". In the C code it is a struct that groups the messages. But it reflects 
+also the documents saved as BSON in mongodb and it is consequently inspired by a json object.
+
+\subsubsection{The structure of the structue}
+The telemetry data structure follows these rules:
+\begin{itemize}
+    \item An instance of the structure, such as a variable of the struct data\_t or a saved document in mongodb, represents a block of messages that were accumulated in a certain amount of milliseconds before being saved and discarded by the volatile memory.
+    \item It has an integer "id" property. It is an incremental dentifier of the block of messages.
+    \item It has a long integer "timestamp" property. It is the timestamp taken just before saving the messages of bloks.
+    \item It has a string "session" property. It is the identifier of the session when the structure block was saved.
+    \item Every single message is represented by a "message object", an object containing the properties "timestamp", that is the timestamp taken when the messages arrived in the telemetry, and "value", that is the value of the message and can be a primitive type as well as an object type.
+    \item A part from the "id", the "timestamp" and the "session" properties, the telemetry data structure is composed by message objects that are always inside an array. This is because, usually, during the life of the block of messages, several messages of the same type will be received and accumulated. Hence, every array of messages contains all the messages of a certain type that arrived in a certain amount of milliseconds.
+    \item The array of messages can be logically nested and grouped in other objects.
+\end{itemize}
+
+\subsubsection{An example}
+This is an example of document saved in mongodb:
+\begin{verbatim}
+{
+    "id": 23,
+    "timestamp": 10483862400000,
+    "sessionName": "2020_04_23__12_00_00__pilot_race",
+    "throttle": [
+        {
+            "timestamp": 10483862400001,
+            "value": 0
+        },
+        {
+            "timestamp": 10483862400002,
+            "value": 5
+        },
+        {
+            "timestamp": 10483862400003,
+            "value": 6
+        }
+    ],
+    "brake": [
+         {
+            "timestamp": 10483862400001,
+            "value": 0
+        },
+        {
+            "timestamp": 10483862400004,
+            "value": 100
+        }
+    ],
+    "bms_hv": {
+        "temperature": [
+            {
+                "timestamp": 10483862400000,
+                "value": {
+                    "max": 28,
+                    "min": 22,
+                    "average": 25
+                }
+            }
+        ],
+        "voltage": [
+            {
+                "timestamp": 10483862400000,
+                "value": {
+                    "max": 312,
+                    "min": 200,
+                    "total": 250
+                }
+            },
+            {
+                "timestamp": 10483862400007,
+                "value": {
+                    "max": 312,
+                    "min": 200,
+                    "total": 250
+                }
+            }
+        ]
+    }
+}
+\end{verbatim}
+
+\subsection{The Problem}
+
+\subsubsection{Introduction}
+
+The problem with the structure is that C code is a statically typed language. This means that it is not suited to handle json object like the
+structure. A structure like the one in the example above, but much longer in the reality, should be used in C code. The result is a structure 
+definition of 350 lines of code, an instance allocation of 50 lines of code, a bson conversion of 400 lines of code and an instance deallocation
+of 30 lines of code. Taking in account that the structure changed frequently, because the new sensors or can messages were added, mantaining and
+keeping updated that code was worse than the hell. If only a message changed, we would have to change four different parts of the code and
+some of them were between 400 lines of code that seem always the same.
+
+\subsubsection{Low-level languages vs Hight-level languages}
+
+Here is the problem: in a statically type like C is very difficult to iterate over the keys of an object, expecially without loosing performance.
+Almost always you need to manually enumerate every single key. In contrast, dynamically programming languages such as javascript can iterate 
+easily, with a few lines of code, over huge objects with plenty of keys. But of course we could not use Javascript for the telemetry.
+
+\subsection{The solution}
+
+Not only were these parts of codes very long, but also repetitive. This was annoying, but being repetitive came us in favour. What is repetitive 
+is easy to standardize and hence automatize. We managed to write in a few days Javascript code that produced C code for us. All those critical 
+parts that were used to make us loose plenty of time were now written by a Javascript program.
+
+\subsubsection{The json format}
+
+There is a json file, called "structure.json", that represents the structure. Every time the data structure changes, we only need to change that
+json file and Javascript does all the rest of the job for us.
+
+The json format is almost identical to the data saved in mongodb. 
+The differences are that:
+\begin{itemize}
+    \item For all the primitive values, instead of the value a string with the primitive type is put in place
+    \item For every array of messages, only a single object is added, it represents the types of the message, and as second element there is an integer representing the maximum number of messages of that type that can be put in a block of messages
+\end{itemize}
+
+This is an example of structure.json:
+\begin{verbatim}
+    {
+    "id": "int",
+    "timestamp": "long",
+    "sessionName": "char*",
+    "throttle": [
+        {
+            "timestamp": "long",
+            "value": "double"
+        }, 200
+    ],
+    "brake": [
+        {
+            "timestamp": "long",
+            "value": "double"
+        }, 200
+    ],
+    "bms_hv": {
+        "temperature": [
+            {
+                "timestamp": "long",
+                "value": {
+                    "max": "double",
+                    "min": "double",
+                    "average": "double"
+                }
+            }, 500
+        ],
+        "voltage": [
+            {
+                "timestamp": "long",
+                "value": {
+                    "max": "double",
+                    "min": "double",
+                    "total": "double"
+                }
+            }, 500
+        ]
+    }
+}
+\end{verbatim}
+
+\subsubsection{The templates}
+
+After coding the functions that wrote the C code, we needed a powerful way to inject it in the C code. Making an entire c file would have made 
+the project less clear and understandable. Copying and pasting it manually would have been annoying. As a solution, we decided that every c 
+or header file that would have contained auto-generated code, should have had a .template.c or .template.h extension. Inside, instead of the
+long and tedious parts of code, had a special comment specifying which part of code should have been there, such as "// {{GENERATED\_BSON\_CODE}}".
+The javascript program would have then automatically found all those .template files and produced an identical copy, without the .template extension
+and with the generated code instead of the special comments.
+
+\subsubsection{The Typescript language}
+
+Initially written in Javascript, we decided to rewrite it in Typescript because the code was quite complicated and adding types to Javascript
+would have made everything more maintainible.
+
+\subsubsection{A separate project}
+
+The code generator was initially included in the telemetry. After observing that it was very rearly changed, we decided to separate it in this 
+project and to make it as an npm command line module. This was done because the code generator was written in a different language from the 
+telemetry, was enough articulated to be separated and was quite safe and there would have not be the need of emergency changes during tests.
+
+\subsubsection{The documentation}
+
+Document that code would have been a long task. We decided to use typedoc (https://typedoc.org/) to generate the documentation. It is a sort of
+javadoc, but for Typescript. It reads the doc comments in the code and generates an html documentation, that is now available online. This was
+also useful, because writing the doc comments is capted by the editors that provide hints.

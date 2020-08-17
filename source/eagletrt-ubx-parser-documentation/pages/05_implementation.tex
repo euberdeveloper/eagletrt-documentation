@@ -1,0 +1,18 @@
+\section{\huge{Implementation}}
+The code of the exporter can be found in this github repo: https://github.com/eagletrt/eagletrt-ubx-parser
+
+\subsection{Dependencies}
+This only external used module is chalk, to a coloured and pretty log. All the others (fs and path) are already provided
+by NodeJS.
+
+\subsection{main.js}
+This is the root file of the script. It simply reads the config.json file in order to get the inputs file and the format of the
+output, parses them and write the generated files.
+
+\subsection{utils}
+The /utils folder contains the principal functions that parse the three types of messages (GGA, GGL, RMC).
+
+\subsection{config.json}
+It should be the only file modified by the user in order to configure it. It is a simple object with two keys. TYPE is the
+desired output format, it can be "JSON" or "CSV". INPUTS is an array containing the name without extension of the ubx input
+files.

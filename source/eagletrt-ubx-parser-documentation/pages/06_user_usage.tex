@@ -1,0 +1,16 @@
+\section{\huge{User usage}}
+To use this parser:
+\begin{enumerate}
+    \item Clone the repo https://github.com/eagletrt/eagletrt-ubx-parser
+    \item Install nodejs
+    \item Navigate to the root folder of the repo
+    \item Execute npm i
+    \item Move the ubx file which are to be exported in the /inputs folder
+    \item Open the config.json file, it will contain two properties:
+        \begin{itemize}
+            \item TYPE is the output format. It can be CSV or JSON
+            \item INPUTS is an array containing the name (without extension) of the file in the inputs folder that are to be parsed
+        \end{itemize}
+    \item Change the config.json file as wanted
+    \item Execute npm start, the parsed file will be in the outputs/csv or outputs/json folder
+\end{enumerate}

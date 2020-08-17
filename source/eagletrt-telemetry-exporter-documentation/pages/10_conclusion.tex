@@ -1,0 +1,15 @@
+\section{\huge{Conclusion}}
+
+\subsection{Summary}
+After developing succesfully the telemetry on a raspberry plugged to the canbus of the car, we bumped into an issue: exporting the gathered data.
+Thinking initially to trivial solutions such as a simple bash script, we came up to an articulated an better solution. We wrote initially
+a command line exporter, that evolved in a webapp served by the raspberry that is usable by everyone that is near to the car, with a browser
+as an only requirement. 
+
+\subsection{Future}
+The project is now quite stable. The only problem is that, in order to connect to its API, the frontend needs to know the raspberry IP, 
+that is not static. For now the IP is nonetheless almost always the same: 192.168.8.101. A minor solution has already been implemented,
+the user can pass url parameters to the webapp, such as http://IP:PORT?hostname=localhost:2323 or http://IP:PORT?host=localhost\&port=2323.
+This solves the biggest problem, that makes the frontend call the right ip for the API in order to work properly. Another problem is that
+the user need to know the IP of the raspberry, and if it changes it can result to be annoying. A better and simple solution for the future
+will be configuring the raspberry to have always the same IP address.

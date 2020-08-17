@@ -1,0 +1,67 @@
+\section{\huge{Developer usage}}
+
+\subsection{Deployment on the raspberry}
+\begin{enumerate}
+    \item Connect the raspberry to the internet.
+    \item Install NodeJs if it is not installed.
+    \item Clone the repository.
+    \item Open the terminal in the root directory of the repository.
+    \item Execute npm i.
+    \item Execute npm run start.
+\end{enumerate}
+
+\subsection{Changing the server port or the mongodb uri}
+\begin{enumerate}
+    \item Open the file config.json.
+    \item Set the property PORT as needed.
+    \item Set the property of the object MONGO as needed.
+\end{enumerate}
+
+\subsection{Changing something in the frontend}
+\begin{enumerate}
+    \item Open the terminal in the directory vuejs of the repository.
+    \item Execute npm i.
+    \item Make changes to the frontend source code.
+    \item See changes by executing npm run serve and open a browser in http://IP:8080. Start the server if backend api are needed.
+    \item Open the terminal in the root directory of the repository.
+    \item Execute npm run build:frontend.
+    \item Execute npm run start to start the server.
+\end{enumerate}
+
+\subsection{Changing the api hostname in the frontend}
+\begin{enumerate}
+    \item Open the file vuejs/src/config.json of this repository.
+    \item Change the host and the port properties as needed.
+    \item Open the terminal in the root directory of this repository.
+    \item Execute npm run build:frontend.
+    \item Execute npm run start to start the server.
+\end{enumerate}
+
+\subsection{Automatize with SystemCtl}
+On the Raspberry runs Linux Ubuntu. This means that systemctl is available.
+To make the exporter run on boot:
+\begin{enumerate}
+    \item Open a terminal.
+    \item Go to the /etc/systemd/system folder.
+    \item Create a file by executing touch exporter.service.
+    \item Copy this code into that file.
+        \begin{alltt}
+            [Unit]
+            Description=Eagle-TRT telemetry exporter webapp
+            Wants=mongodb.service
+            After=mongodb.service
+            StartLimitIntervalSec=0
+            [Service]
+            Type=simple
+            Restart=always
+            RestartSec=5
+            User=ubuntu
+            ExecStart=/usr/bin/node /home/ubuntu/eagletrt-telemetria-exporter/main.js
+            WorkingDirectory=/home/ubuntu/eagletrt-telemetria-exporter
+            [Install]
+            WantedBy=multi-user.target
+        \end{alltt}
+    \item Execute sudo systemctl daemon-reload to make the changes effective.
+    \item Execute sudo systemctl start exporter. The exporter should start running at this step.
+    \item Execute sudo systemctl enable exporter to make the exporter start on boot.
+\end{enumerate}

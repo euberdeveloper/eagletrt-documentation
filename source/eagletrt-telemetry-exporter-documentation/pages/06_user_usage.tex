@@ -1,0 +1,13 @@
+\section{\huge{User usage}}
+This section supposes that the telemetry database structure is already known.
+To see an online demo of the exporter (first version), follow this link: https://telemetria-exporter-demo.herokuapp.com/.
+
+The user usage is this:
+\begin{enumerate}
+    \item The user types in a browser http://IP:PORT, where IP is the ip of the raspberry and PORT is the port of the server.
+    \item The webapp asks the server for the database schema and shows it.
+    \item Three columns are shown. The first shows the collections. When the user select a collection, in the second column appear the sessions of that collection. The user can select or unselect sessions by clicking on them. All the selected sessions appear in the third column, organized by collection. The selected sessions can be unselected also by clicking them in the third column.
+    \item Once selected the sessions to export, the user clicks the JSON or the CSV button, depending on the desidered format.
+    \item The webapp sends the request to the server and wait for a zipped file of the exported sessions.
+    \item After the server answers to the webapp, the zip file named with a human-readable timestamp is downloaded. Then the webapp comes back to point 2.
+\end{enumerate}

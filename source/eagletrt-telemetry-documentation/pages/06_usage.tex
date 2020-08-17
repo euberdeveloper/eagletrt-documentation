@@ -1,0 +1,46 @@
+\section{\huge{Usage}}
+
+\subsection{Prerequisites to run on local machine}
+
+\begin{enumerate}
+    \item Use a Linux operative system
+    \item Install gcc to compile c programs, on ubuntu sudo apt install build-essential
+    \item Install nodejs to execute js scripts, on ubuntu follow this post (https://linuxize.com/post/how-to-install-node-js-on-ubuntu-18.04/)
+    \item Install mosquitto to host an mqtt broker, sudo apt install mosquitto \&\& sudo apt install mosquitto-clients
+    \item Install canutils to connect to canbus, sudo apt install can-utils
+    \item Install mongodb to have the local database, on ubuntu follow this guid (https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)
+    \item Install mongodriver for c to use mongodb from c, on ubuntu sudo apt install libmongoc-dev \&\& sudo apt install libbson-dev
+    \item Install mqttdriver for c to use mqtt from c, on ubuntu sudo apt install libmosquitto-dev
+\end{enumerate}
+
+\subsection{Before running the telemetry}
+
+\begin{enumerate}
+    \item Make sure mongod service is active (check that the command "mongo" works)
+    \item Simulate the canbus and the gps serial port (check this repo https://github.com/FilippoGas/eagletrt-telemetry-simulator) This is needed when debugging the telemetry in a local pc
+\end{enumerate}
+
+\subsection{To run the telemetry}
+
+\begin{enumerate}
+    \item Clone this repo https://github.com/eagletrt/fenice-telemetria-sender
+    \item Execute npm i to install the nodejs dependencies
+    \item Execute npm run transpile or npx eagle generate to execute the js script and generate the c code
+    \item Execute npm run compile or ./compile.sh to compile the c code
+    \item Execute npm run start or sudo ./sender.out config.json to start the telemetry (executing npm run serve does all the last three points with an only command)
+\end{enumerate}
+
+\subsection{To change the telemetry status}
+
+\begin{enumerate}
+    \item Execute npm run enable or ./enable.sh to enable the telemetry and make it saving data on the db
+    \item Execute npm run idle or ./idle.sh to disable the telemetry and make it stopping saving data on the db This is usually useful when debbugging the application on a local computer, because simulates what does the steering wheel of the car
+\end{enumerate}
+
+\subsection{To check everything is going well}
+
+\begin{enumerate}
+    \item Before starting the telemetry execute mosquitto\_sub -t telemetria\_log. It should show the log of the telemetry.
+    \item Execute mosquitto\_sub -t telemetria, it should show the data sent by the telemetry via mqtt (it is sent even when the telemetry is idle).
+    \item Open mongo compass and check the data is saved on mogodb
+\end{enumerate}

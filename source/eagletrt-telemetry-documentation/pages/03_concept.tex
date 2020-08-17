@@ -1,0 +1,16 @@
+\section{\huge{Concept}}
+After managing to build an electric car we needed a telemetry. It was essential to have something that joined all the sensors and gave us an
+easy and unique way to understand what happened in the car. As almost every team, we could have bought an already-made solution and plugged it
+to the canbus. But that was not the philosophy of ours. We built a telemetry from scratch, projecting and programming it.
+
+\subsection{Requirements}
+All the sensors, the steering wheel and the ecu are plugged to the canbus. They send and receive all the messages through that. The simplest 
+debugging method could be done is save a can log, task that is actually currently done by the steering wheel by using can-utils (https://github.com/linux-can/can-utils).
+But having a raw can log is of course not enough and it is also uncomfortable. So we decided to create a telemetry that read all the messages 
+from the canbus and parsed them in a more readable and handable way. After some time, when we added a new base-rover GPS, we decided to plug the
+rover GPS directly on the telemetry and read its messages through its serial port.
+
+\subsection{Purpose}
+The purpose of the telemetry is making the teams know in a comfortable and easy way what happened in the car. It joins all the messages from the canbus
+and the GPS in one place and handles them in a desidered way. It stores the data in a local and easily exportable database and forwards the data 
+via mqtt so that some pseudo-real-time applications can be ran. The data can then be managed as wanted, mostly used by the analysis team.
