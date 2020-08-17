@@ -12,7 +12,7 @@ Here you can find the following latek source for a project template and the docu
 
 ## Structure
 
-The **source** folder contains the latek source of the projects, the **bin** contains the generated pdf for each project.
+The **source** folder contains the latek source of the projects, the **bin** contains the generated pdf for each project. You can find the generated pdf in the **releases** section of this github repo.
 
 ## Template
 
