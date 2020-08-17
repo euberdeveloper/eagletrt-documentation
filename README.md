@@ -13,3 +13,7 @@ Here you can find the following latek source for a project template and the docu
 ## Structure
 
 The **source** folder contains the latek source of the projects, the **bin** contains the generated pdf for each project.
+
+## Template
+
+The **template** was published also in **[Overleaf](https://www.overleaf.com)**, you can use it following this link: [https://www.overleaf.com/latex/templates/eagletrt-documentation-template/ycnmvfqfnbyr](https://www.overleaf.com/latex/templates/eagletrt-documentation-template/ycnmvfqfnbyr).
